@@ -47,6 +47,60 @@ form.appendChild(dateInput);
 form.appendChild(submitButton);
 app.appendChild(form);
 
+var filterState = 'all';
+var sortOrder = 'asc';
+
+const controlsSection = document.createElement('section');
+controlsSection.className = 'task-controls';
+controlsSection.setAttribute('aria-label', 'Фильтр и сортировка');
+
+const filterLabel = document.createElement('span');
+filterLabel.className = 'task-controls__label';
+filterLabel.textContent = 'Фильтр:';
+
+const filterAllBtn = document.createElement('button');
+filterAllBtn.className = 'task-controls__btn task-controls__btn--filter is-active';
+filterAllBtn.setAttribute('type', 'button');
+filterAllBtn.textContent = 'Все';
+filterAllBtn.setAttribute('data-filter', 'all');
+
+const filterDoneBtn = document.createElement('button');
+filterDoneBtn.className = 'task-controls__btn task-controls__btn--filter';
+filterDoneBtn.setAttribute('type', 'button');
+filterDoneBtn.textContent = 'Выполненные';
+filterDoneBtn.setAttribute('data-filter', 'done');
+
+const filterUndoneBtn = document.createElement('button');
+filterUndoneBtn.className = 'task-controls__btn task-controls__btn--filter';
+filterUndoneBtn.setAttribute('type', 'button');
+filterUndoneBtn.textContent = 'Невыполненные';
+filterUndoneBtn.setAttribute('data-filter', 'undone');
+
+const sortLabel = document.createElement('span');
+sortLabel.className = 'task-controls__label';
+sortLabel.textContent = 'Сортировка:';
+
+const sortAscBtn = document.createElement('button');
+sortAscBtn.className = 'task-controls__btn task-controls__btn--sort';
+sortAscBtn.setAttribute('type', 'button');
+sortAscBtn.textContent = 'По дате (сначала раньше)';
+sortAscBtn.setAttribute('data-sort', 'asc');
+
+const sortDescBtn = document.createElement('button');
+sortDescBtn.className = 'task-controls__btn task-controls__btn--sort';
+sortDescBtn.setAttribute('type', 'button');
+sortDescBtn.textContent = 'По дате (сначала позже)';
+sortDescBtn.setAttribute('data-sort', 'desc');
+
+controlsSection.appendChild(filterLabel);
+controlsSection.appendChild(filterAllBtn);
+controlsSection.appendChild(filterDoneBtn);
+controlsSection.appendChild(filterUndoneBtn);
+controlsSection.appendChild(sortLabel);
+controlsSection.appendChild(sortAscBtn);
+controlsSection.appendChild(sortDescBtn);
+app.appendChild(controlsSection);
+
 const listSection = document.createElement('section');
 listSection.className = 'task-list-section';
 listSection.setAttribute('aria-label', 'Список задач');
@@ -107,6 +161,44 @@ function formatTaskText(title, date) {
   return title + (date ? ' - ' + date : '');
 }
 
+function applyFilter() {
+  var items = taskList.querySelectorAll('.task-list__item');
+  items.forEach(function (item) {
+    var isDone = item.classList.contains('task-list__item--done');
+    var hide = (filterState === 'done' && !isDone) || (filterState === 'undone' && isDone);
+    item.classList.toggle('task-list__item--hidden', hide);
+  });
+}
+
+function applySort() {
+  var items = Array.from(taskList.querySelectorAll('.task-list__item'));
+  items.sort(function (a, b) {
+    var dateA = a.dataset.date || (sortOrder === 'asc' ? '9999-99-99' : '');
+    var dateB = b.dataset.date || (sortOrder === 'asc' ? '9999-99-99' : '');
+    if (dateA < dateB) return sortOrder === 'asc' ? -1 : 1;
+    if (dateA > dateB) return sortOrder === 'asc' ? 1 : -1;
+    return 0;
+  });
+  items.forEach(function (item) {
+    taskList.appendChild(item);
+  });
+}
+
+function setFilterState(state) {
+  filterState = state;
+  filterAllBtn.classList.toggle('is-active', state === 'all');
+  filterDoneBtn.classList.toggle('is-active', state === 'done');
+  filterUndoneBtn.classList.toggle('is-active', state === 'undone');
+  applyFilter();
+}
+
+function setSortOrder(order) {
+  sortOrder = order;
+  sortAscBtn.classList.toggle('is-active', order === 'asc');
+  sortDescBtn.classList.toggle('is-active', order === 'desc');
+  applySort();
+}
+
 function createTaskItem(title, date) {
   const taskItem = document.createElement('li');
   taskItem.className = 'task-list__item';
@@ -119,6 +211,7 @@ function createTaskItem(title, date) {
   doneCheckbox.setAttribute('aria-label', 'Отметить как выполненную');
   doneCheckbox.addEventListener('change', function () {
     taskItem.classList.toggle('task-list__item--done', doneCheckbox.checked);
+    applyFilter();
   });
   taskItem.appendChild(doneCheckbox);
 
@@ -170,6 +263,7 @@ function createTaskItem(title, date) {
       newTaskText.className = 'task-list__item-text';
       newTaskText.textContent = formatTaskText(newTitle || 'Задача', newDate || '');
       contentSlot.appendChild(newTaskText);
+      applySort();
     }
     saveBtn.addEventListener('click', saveEdit);
     editTitleInput.addEventListener('keydown', function (e) {
@@ -203,4 +297,12 @@ form.addEventListener('submit', function (event) {
 
   titleInput.value = '';
   dateInput.value = '';
+  applyFilter();
+  applySort();
 });
+
+filterAllBtn.addEventListener('click', function () { setFilterState('all'); });
+filterDoneBtn.addEventListener('click', function () { setFilterState('done'); });
+filterUndoneBtn.addEventListener('click', function () { setFilterState('undone'); });
+sortAscBtn.addEventListener('click', function () { setSortOrder('asc'); });
+sortDescBtn.addEventListener('click', function () { setSortOrder('desc'); });
