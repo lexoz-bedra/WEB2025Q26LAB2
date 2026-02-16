@@ -74,7 +74,23 @@ form.addEventListener('submit', function (event) {
 
   const taskItem = document.createElement('li');
   taskItem.className = 'task-list__item';
-  taskItem.textContent = title + (date ? ' — ' + date : '');
+
+  const taskText = document.createElement('span');
+  taskText.className = 'task-list__item-text';
+  taskText.textContent = title + (date ? ' — ' + date : '');
+
+  const deleteBtn = document.createElement('button');
+  deleteBtn.className = 'task-list__item-delete';
+  deleteBtn.setAttribute('type', 'button');
+  deleteBtn.setAttribute('aria-label', 'Удалить задачу');
+  deleteBtn.textContent = 'Удалить';
+
+  deleteBtn.addEventListener('click', function () {
+    taskItem.remove();
+  });
+
+  taskItem.appendChild(taskText);
+  taskItem.appendChild(deleteBtn);
   taskList.appendChild(taskItem);
 
   titleInput.value = '';
