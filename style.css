@@ -116,20 +116,100 @@ body {
   border-radius: 6px;
 }
 
-.task-list__item-text {
+.task-list__item--done .task-list__item-text {
+  text-decoration: line-through;
+  color: #64748b;
+}
+
+.task-list__item-done {
+  flex-shrink: 0;
+  width: 1.25rem;
+  height: 1.25rem;
+  cursor: pointer;
+}
+
+.task-list__item-content {
   flex: 1;
   min-width: 0;
 }
 
+.task-list__item-text {
+  display: block;
+  min-width: 0;
+}
+
+.task-list__item-edit-form {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  align-items: center;
+}
+
+.task-list__item-edit-input {
+  padding: 0.35rem 0.5rem;
+  font-size: 0.875rem;
+  border: 1px solid #e2e8f0;
+  border-radius: 4px;
+  min-width: 0;
+}
+
+.task-list__item-edit-input[type="text"] {
+  flex: 1;
+  min-width: 80px;
+}
+
+.task-list__item-save {
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2rem;
+  height: 2rem;
+  padding: 0;
+  color: #fff;
+  background-color: #16a34a;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.task-list__item-save:hover {
+  background-color: #15803d;
+}
+
+.task-list__item-icon {
+  display: block;
+  width: 1.125rem;
+  height: 1.125rem;
+}
+
+.task-list__item-edit,
 .task-list__item-delete {
   flex-shrink: 0;
-  padding: 0.35rem 0.6rem;
-  font-size: 0.875rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2rem;
+  height: 2rem;
+  padding: 0;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.task-list__item-edit {
+  color: #1e40af;
+  background-color: transparent;
+  border: 1px solid #93c5fd;
+}
+
+.task-list__item-edit:hover {
+  background-color: #eff6ff;
+}
+
+.task-list__item-delete {
   color: #b91c1c;
   background-color: transparent;
   border: 1px solid #fecaca;
-  border-radius: 4px;
-  cursor: pointer;
 }
 
 .task-list__item-delete:hover {
