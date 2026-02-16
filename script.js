@@ -49,10 +49,23 @@ app.appendChild(form);
 
 var filterState = 'all';
 var sortOrder = 'asc';
+var searchQuery = '';
 
 const controlsSection = document.createElement('section');
 controlsSection.className = 'task-controls';
-controlsSection.setAttribute('aria-label', 'Фильтр и сортировка');
+controlsSection.setAttribute('aria-label', 'Поиск, фильтр и сортировка');
+
+const searchLabel = document.createElement('label');
+searchLabel.className = 'task-controls__label';
+searchLabel.textContent = 'Поиск:';
+searchLabel.setAttribute('for', 'task-search');
+
+const searchInput = document.createElement('input');
+searchInput.className = 'task-controls__search';
+searchInput.setAttribute('type', 'search');
+searchInput.setAttribute('id', 'task-search');
+searchInput.setAttribute('placeholder', 'По названию');
+searchInput.setAttribute('aria-label', 'Поиск задач по названию');
 
 const filterLabel = document.createElement('span');
 filterLabel.className = 'task-controls__label';
@@ -92,6 +105,8 @@ sortDescBtn.setAttribute('type', 'button');
 sortDescBtn.textContent = 'По дате (сначала позже)';
 sortDescBtn.setAttribute('data-sort', 'desc');
 
+controlsSection.appendChild(searchLabel);
+controlsSection.appendChild(searchInput);
 controlsSection.appendChild(filterLabel);
 controlsSection.appendChild(filterAllBtn);
 controlsSection.appendChild(filterDoneBtn);
@@ -163,10 +178,13 @@ function formatTaskText(title, date) {
 
 function applyFilter() {
   var items = taskList.querySelectorAll('.task-list__item');
+  var query = searchQuery.toLowerCase();
   items.forEach(function (item) {
     var isDone = item.classList.contains('task-list__item--done');
-    var hide = (filterState === 'done' && !isDone) || (filterState === 'undone' && isDone);
-    item.classList.toggle('task-list__item--hidden', hide);
+    var byStatus = (filterState === 'done' && !isDone) || (filterState === 'undone' && isDone);
+    var title = (item.dataset.title || '').toLowerCase();
+    var bySearch = query.length > 0 && title.indexOf(query) === -1;
+    item.classList.toggle('task-list__item--hidden', byStatus || bySearch);
   });
 }
 
@@ -199,19 +217,54 @@ function setSortOrder(order) {
   applySort();
 }
 
-function createTaskItem(title, date) {
+var STORAGE_KEY = 'todo-tasks';
+
+function saveTasksToStorage() {
+  var items = taskList.querySelectorAll('.task-list__item');
+  var data = Array.from(items).map(function (item) {
+    return {
+      title: item.dataset.title || '',
+      date: item.dataset.date || '',
+      done: item.classList.contains('task-list__item--done')
+    };
+  });
+  try {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+  } catch (e) {}
+}
+
+function loadTasksFromStorage() {
+  try {
+    var json = localStorage.getItem(STORAGE_KEY);
+    if (!json) return;
+    var data = JSON.parse(json);
+    if (!Array.isArray(data)) return;
+    data.forEach(function (task) {
+      var taskItem = createTaskItem(task.title, task.date, task.done);
+      taskList.appendChild(taskItem);
+    });
+    applyFilter();
+    applySort();
+  } catch (e) {}
+}
+
+function createTaskItem(title, date, done) {
+  if (typeof done !== 'boolean') done = false;
   const taskItem = document.createElement('li');
   taskItem.className = 'task-list__item';
   taskItem.dataset.title = title;
   taskItem.dataset.date = date || '';
+  if (done) taskItem.classList.add('task-list__item--done');
 
   const doneCheckbox = document.createElement('input');
   doneCheckbox.className = 'task-list__item-done';
   doneCheckbox.setAttribute('type', 'checkbox');
   doneCheckbox.setAttribute('aria-label', 'Отметить как выполненную');
+  doneCheckbox.checked = done;
   doneCheckbox.addEventListener('change', function () {
     taskItem.classList.toggle('task-list__item--done', doneCheckbox.checked);
     applyFilter();
+    saveTasksToStorage();
   });
   taskItem.appendChild(doneCheckbox);
 
@@ -264,6 +317,7 @@ function createTaskItem(title, date) {
       newTaskText.textContent = formatTaskText(newTitle || 'Задача', newDate || '');
       contentSlot.appendChild(newTaskText);
       applySort();
+      saveTasksToStorage();
     }
     saveBtn.addEventListener('click', saveEdit);
     editTitleInput.addEventListener('keydown', function (e) {
@@ -279,6 +333,7 @@ function createTaskItem(title, date) {
   deleteBtn.appendChild(createTrashIcon());
   deleteBtn.addEventListener('click', function () {
     taskItem.remove();
+    saveTasksToStorage();
   });
   taskItem.appendChild(deleteBtn);
 
@@ -299,6 +354,14 @@ form.addEventListener('submit', function (event) {
   dateInput.value = '';
   applyFilter();
   applySort();
+  saveTasksToStorage();
+});
+
+loadTasksFromStorage();
+
+searchInput.addEventListener('input', function () {
+  searchQuery = searchInput.value.trim();
+  applyFilter();
 });
 
 filterAllBtn.addEventListener('click', function () { setFilterState('all'); });
