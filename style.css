@@ -177,6 +177,15 @@ body {
   display: none;
 }
 
+.task-list__item--dragging {
+  opacity: 0.5;
+}
+
+.task-list__item--drag-over {
+  outline: 2px dashed #2563eb;
+  outline-offset: 2px;
+}
+
 .task-list__item-done {
   flex-shrink: 0;
   width: 1.25rem;

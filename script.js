@@ -50,6 +50,7 @@ app.appendChild(form);
 var filterState = 'all';
 var sortOrder = 'asc';
 var searchQuery = '';
+var draggedItem = null;
 
 const controlsSection = document.createElement('section');
 controlsSection.className = 'task-controls';
@@ -255,6 +256,39 @@ function createTaskItem(title, date, done) {
   taskItem.dataset.title = title;
   taskItem.dataset.date = date || '';
   if (done) taskItem.classList.add('task-list__item--done');
+
+  taskItem.setAttribute('draggable', 'true');
+  taskItem.setAttribute('aria-label', 'Задача, перетащите для изменения порядка');
+  taskItem.addEventListener('dragstart', function (e) {
+    draggedItem = taskItem;
+    e.dataTransfer.effectAllowed = 'move';
+    e.dataTransfer.setData('text/plain', '');
+    taskItem.classList.add('task-list__item--dragging');
+  });
+  taskItem.addEventListener('dragend', function () {
+    taskItem.classList.remove('task-list__item--dragging');
+    taskList.querySelectorAll('.task-list__item--drag-over').forEach(function (el) {
+      el.classList.remove('task-list__item--drag-over');
+    });
+    draggedItem = null;
+  });
+  taskItem.addEventListener('dragover', function (e) {
+    e.preventDefault();
+    if (draggedItem && draggedItem !== taskItem) {
+      e.dataTransfer.dropEffect = 'move';
+      taskItem.classList.add('task-list__item--drag-over');
+    }
+  });
+  taskItem.addEventListener('dragleave', function () {
+    taskItem.classList.remove('task-list__item--drag-over');
+  });
+  taskItem.addEventListener('drop', function (e) {
+    e.preventDefault();
+    taskItem.classList.remove('task-list__item--drag-over');
+    if (!draggedItem || draggedItem === taskItem) return;
+    taskList.insertBefore(draggedItem, taskItem);
+    saveTasksToStorage();
+  });
 
   const doneCheckbox = document.createElement('input');
   doneCheckbox.className = 'task-list__item-done';
